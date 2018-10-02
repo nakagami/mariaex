@@ -62,10 +62,16 @@ create_user =
     _ -> "CREATE USER IF NOT EXISTS"
   end
 
+plugin_name =
+  case System.get_env("DB") do
+    "mysql:8.0" -> "caching_sha2_password"
+    _ -> "mysql_native_password"
+  end
+
 cmds = [
   ~s(mysql #{mysql_connect} -e "DROP DATABASE IF EXISTS mariaex_test;"),
   ~s(mysql #{mysql_connect} -e "CREATE DATABASE mariaex_test DEFAULT CHARACTER SET 'utf8' COLLATE 'utf8_general_ci';"),
-  ~s(mysql #{mysql_connect} -e "#{create_user} 'mariaex_user'@'%' IDENTIFIED BY 'mariaex_pass';"),
+  ~s(mysql #{mysql_connect} -e "#{create_user} 'mariaex_user'@'%' IDENTIFIED WITH #{plugin_name} BY 'mariaex_pass';"),
   ~s(mysql #{mysql_connect} -e "GRANT ALL ON *.* TO 'mariaex_user'@'%' WITH GRANT OPTION"),
   ~s(mysql --host=#{mysql_host} --port=#{mysql_port} --protocol=tcp -u mariaex_user -pmariaex_pass mariaex_test -e "#{
     sql
